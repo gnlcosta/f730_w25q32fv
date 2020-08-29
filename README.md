@@ -9,3 +9,7 @@
  
 # Board
 Aliexpress: https://a.aliexpress.com/_BOJKBW
+
+# License
+MIT License
+Copyright (c) 2020 Gianluca Costa
