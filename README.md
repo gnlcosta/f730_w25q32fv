@@ -8,8 +8,9 @@
  * STM32CubeMX 6.0.1
  
 # Board
-Aliexpress: https://a.aliexpress.com/_BOJKBW
+Aliexpress: https://a.aliexpress.com/_BOJKBW  
+![Board](https://github.com/gnlcosta/f730/raw/master/doc/board.jpg)
 
 # License
-MIT License
+MIT License  
 Copyright (c) 2020 Gianluca Costa
