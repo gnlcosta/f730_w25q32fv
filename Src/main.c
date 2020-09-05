@@ -86,16 +86,16 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-  memset(&hqspi, 0, sizeof(hqspi));
+
+  __HAL_RCC_QSPI_FORCE_RESET();  //completely reset peripheral
+  __HAL_RCC_QSPI_RELEASE_RESET();
+
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_QUADSPI_Init();
   /* USER CODE BEGIN 2 */
-
-  HAL_QSPI_DeInit(&hqspi);
-  HAL_QSPI_Init(&hqspi);
 
   return 1;
 

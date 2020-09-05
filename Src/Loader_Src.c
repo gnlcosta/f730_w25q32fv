@@ -1,5 +1,6 @@
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "main.h"
@@ -8,6 +9,7 @@
 
 #define DSPI_START_ADDR_MAP          0x90000000
 
+extern uint32_t g_pfnVectors;
 
 int main(void);
 void SystemInit(void);
@@ -29,14 +31,20 @@ void SystemInit(void);
   */
 int Write(uint32_t Address, uint32_t Size, uint32_t Buffer)
 {
+	HAL_ResumeTick();
+
 	DQSpiReset();
 
     if (DQSpiWrite(Address-DSPI_START_ADDR_MAP, (unsigned char *)Buffer, Size) != 0) {
+    	HAL_SuspendTick();
+
         return 0;
     }
 
 	DQSpiReset();
 	DQSpiMemoryMapped();
+
+	HAL_SuspendTick();
 
     return 1;
 }
@@ -55,6 +63,8 @@ int SectorErase(uint32_t EraseStartAddress, uint32_t EraseEndAddress)
 {
 	uint32_t sct_start, sect_size, sct_end, i;
 
+	HAL_ResumeTick();
+
 	DQSpiFlashInfo(NULL, &sect_size, NULL, NULL);
 
 	DQSpiReset();
@@ -67,6 +77,8 @@ int SectorErase(uint32_t EraseStartAddress, uint32_t EraseEndAddress)
 
     for (i=sct_start; i!=sct_end; i++) {
         if (DQSpiEraseBlock(i*sect_size) != 0) {
+        	HAL_SuspendTick();
+
             return 0;
         }
     }
@@ -74,21 +86,30 @@ int SectorErase(uint32_t EraseStartAddress, uint32_t EraseEndAddress)
 	DQSpiReset();
 	DQSpiMemoryMapped();
 
+	HAL_SuspendTick();
+
     return 1;
 }
 
 
 int MassErase(void)
 {
+	HAL_ResumeTick();
+
 	DQSpiReset();
 
-	if (DQSpiEraseChip() == 0)
-		return 1;
+	if (DQSpiEraseChip() == 0) {
+    	HAL_SuspendTick();
+
+		return 0;
+	}
 
 	DQSpiReset();
 	DQSpiMemoryMapped();
 
-	return 0;
+	HAL_SuspendTick();
+
+	return 1;
 }
 
 
@@ -109,7 +130,10 @@ int Init(void)
 {
     int ret;
 
+    __disable_irq();
     SystemInit();
+    SCB->VTOR = (uint32_t)&g_pfnVectors;
+    __enable_irq();
 
 	ret = main();
 
@@ -119,38 +143,9 @@ int Init(void)
 
 	DQSpiMemoryMapped();
 
+	HAL_SuspendTick();
+
     return ret;
 }
 
 
-/*******************************************************************************
-Description :		       Initialisation of ticks counter
-Inputs :
-TickPriority : Set tick priority
-outputs :
-NONE
-********************************************************************************/
-HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
-{
-  return HAL_OK;
-}
-
-
-/*******************************************************************************
-Description :		       Delay in mS.
-Inputs :
-Delay : Time in mS
-outputs :
-NONE
-********************************************************************************/
-volatile uint32_t forse_time;
-void HAL_Delay(__IO uint32_t Delay)
-{
-	volatile uint32_t i, j;
-
-	for(i=0; i!=(Delay); i++) {
-		for (j=0; j!=216000; j++) {
-			forse_time++;
-		}
-	}
-}
